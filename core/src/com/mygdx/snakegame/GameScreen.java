@@ -7,6 +7,7 @@ import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.GL20;
 import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
+import com.badlogic.gdx.math.MathUtils;
 
 /**
  * Created by markw on 11/5/15.
@@ -15,19 +16,24 @@ public class GameScreen extends ScreenAdapter {
 
     private SpriteBatch batch;
     private Texture snakeHead;
-    private static final float MOVE_TIME = 1F;
+    private Texture apple;
+    private static final float MOVE_TIME = 0.5F;
     private float timer = MOVE_TIME;
     private static final int SNAKE_MOVEMENT = 32;
     private int snakeX = 0, snakeY = 0;
+    private boolean appleAvailable = false;
+    private int appleX, appleY;
 
     @Override
     public void show() {
         batch = new SpriteBatch();
         snakeHead = new Texture(Gdx.files.internal("snakehead.png"));
+        apple = new Texture(Gdx.files.internal("apple.png"));
     }
 
     @Override
     public void render(float delta) {
+
         queryInput();
         timer -= delta;
         if (timer <= 0) {
@@ -38,9 +44,44 @@ public class GameScreen extends ScreenAdapter {
 
         Gdx.gl.glClearColor(Color.BLACK.r, Color.BLACK.g, Color.BLACK.b, Color.BLACK.a);
         Gdx.gl.glClear(GL20.GL_COLOR_BUFFER_BIT);
+        checkAppleCollision();
+        checkAndPlaceApple();
+        clearScreen();
+        draw();
+    }
+
+    private void checkAppleCollision() {
+
+        if (appleAvailable && appleX == snakeX && appleY == snakeY) {
+            appleAvailable = false;
+        }
+    }
+
+    private void draw() {
+
         batch.begin();
         batch.draw(snakeHead, snakeX, snakeY);
+        if (appleAvailable) {
+            batch.draw(apple, appleX, appleY);
+        }
         batch.end();
+    }
+
+    private void clearScreen() {
+
+        Gdx.gl.glClearColor(Color.BLACK.r, Color.BLACK.g, Color.BLACK.b, Color.BLACK.a);
+        Gdx.gl.glClear(GL20.GL_COLOR_BUFFER_BIT);
+    }
+
+    private void checkAndPlaceApple() {
+
+        if (!appleAvailable) {
+            do {
+                appleX = MathUtils.random(Gdx.graphics.getWidth() / SNAKE_MOVEMENT - 1) * SNAKE_MOVEMENT;
+                appleY = MathUtils.random(Gdx.graphics.getHeight() / SNAKE_MOVEMENT - 1) * SNAKE_MOVEMENT;
+                appleAvailable = true;
+            } while (appleX == snakeX && appleY == snakeY);
+        }
     }
 
     private void checkForOutOfBounds() {
